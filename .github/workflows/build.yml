@@ -19,3 +19,9 @@ jobs:
 
       - name: Build 
         run: make
+
+      - name: Push artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world
+          path: bin/hello-world

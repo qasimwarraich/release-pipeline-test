@@ -5,11 +5,7 @@ on:
  workflow_call:
 
 env:
-  REGISTRY_USER: ${{ github.actor }}
-  REGISTRY_PASSWORD: ${{ github.token }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
-  IMAGE_NAME: hello-world
 
 jobs:
   release:
@@ -32,12 +28,3 @@ jobs:
         with:
           version: v1.21.2
           args: release --clean
-
-      - name: Build image
-        run: podman build . -t ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Login with Podman
-        run: podman login -u ${{ env.REGISTRY_USER }} -p ${{ env.REGISTRY_PASSWORD }} ghcr.io
-
-      - name: Push image to GHCR
-        run: podman push ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
