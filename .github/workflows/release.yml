@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  REGISTRY_USER: ${{ github.actor }}
+  REGISTRY_PASSWORD: ${{ github.token }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  IMAGE_NAME: test-image
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch --force --tags
+
+      - name: Setup go
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.3
+
+      - name: Setup goreleaser
+      - uses: goreleaser/goreleaser-action@v5
+        with:
+          version: v1.21.2
+          args: release --clean
+
+      - name: Build image
+        run: podman build . -t ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      - name: Login with Podman
+        run: podman login -u ${{ env.REGISTRY_USER }} -p ${{ env.REGISTRY_PASSWORD }} ghcr.io
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      - name: Push image to GHCR
+        run: podman push ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
