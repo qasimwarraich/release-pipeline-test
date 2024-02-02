@@ -1,13 +1,8 @@
 name: Release
 
 on:
-  workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
+ workflow_dispatch:
+ workflow_call:
 
 env:
   REGISTRY_USER: ${{ github.actor }}
@@ -18,23 +13,22 @@ env:
 
 jobs:
   release:
-    name: Create release
     runs-on: ubuntu-latest
-    needs: build
+    name: Create release
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - run: git fetch --force --tags
 
       - name: Setup go
-      - uses: actions/setup-go@v4
+        uses: actions/setup-go@v4
         with:
           go-version: 1.21.3
 
       - name: Setup goreleaser
-      - uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: v1.21.2
           args: release --clean
